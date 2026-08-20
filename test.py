@@ -1,5 +1,5 @@
 import torch
-from training import chars, Axis_r
+from model_1 import chars, Axis_r
 
 weights_local = torch.load("model.pt")
 
