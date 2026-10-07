@@ -1,19 +1,42 @@
 import torch
-from model_1 import chars, Axis_r
 
-weights_local = torch.load("model.pt")
+itos = [chr(i) for i in range(ord('a'), ord('z') + 1)] + ['.']
+stoi = {s: i for i, s in enumerate(itos)}
 
-def gen_name():
-    name = "."
-    while True:
-        logits = torch.nn.functional.one_hot(torch.tensor(Axis_r[name[-1]]), num_classes=27).float() @ weights_local
-        prob = logits.softmax(dim=0)
-        next_char_idx = torch.multinomial(prob, num_samples=1)
-        next_char = chars[next_char_idx]
-        name += next_char
-        if next_char == ".":
+context_length = 3
+emb_size = 10
+
+params = torch.load("params.pt")
+emb_table = params['embedding']
+W1 = params['W1']
+b1 = params['b1']
+W2 = params['W2']
+b2 = params['b2']
+
+def generate_name(max_len=20):
+
+    context = [0] * context_length
+    out = []
+
+    for _ in range(max_len):
+
+        emb = emb_table[torch.tensor([context])]
+        x = emb.view(1, emb_size * context_length)
+
+        h = torch.tanh(x @ W1 + b1)
+        logits = h @ W2 + b2
+
+        probs = torch.softmax(logits, dim=1)
+        idx = torch.multinomial(probs, num_samples=1).item()
+
+        if idx == stoi['.']:
             break
-    return name[1:-1]
 
-for _ in range(100):
-    print(gen_name())
+        out.append(itos[idx])
+        context = context[1:] + [idx]
+
+    return ''.join(out)
+
+if __name__ == "__main__":
+    for _ in range(10):
+        print(generate_name())

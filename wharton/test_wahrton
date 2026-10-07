@@ -1,0 +1,14 @@
+from alpaca.data.historical import StockHistoricalDataClient
+from alpaca.data.requests import StockLatestQuoteRequest
+
+API_KEY = "PKCRGSTX6C5XPPGIEVHTHMXN23"
+SECRET_KEY = "8AZrn3foq7bZbstCACkx1YGGjyUt267cFtxQiki2DCEU"
+
+client = StockHistoricalDataClient(API_KEY, SECRET_KEY)
+
+symbols = ["AAPL", "TSLA", "SPY"]
+req = StockLatestQuoteRequest(symbol_or_symbols=symbols)
+quotes = client.get_stock_latest_quote(req)
+
+for symbol, q in quotes.items():
+    print(f"{symbol}: bid={q.bid_price} ask={q.ask_price} time={q.timestamp}")

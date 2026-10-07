@@ -38,11 +38,8 @@ def training(contexts, ans):
     X = torch.tensor(contexts)
     Y = torch.tensor(ans)
 
-    ix = torch.randint(0, X.shape[0], (32,))
-    Xb = X[ix]
-    Yb = Y[ix]
-
     epoch = 50000
+
     lr = 0.01
 
     neuron_count = 200
@@ -79,6 +76,10 @@ def training(contexts, ans):
 
     for rnd in range(epoch):
 
+        ix = torch.randint(0, X.shape[0], (50,))
+        Xb = X[ix]
+        Yb = Y[ix]
+        
         if rnd % 100 == 0:
             t0 = time.time()
 
@@ -92,29 +93,32 @@ def training(contexts, ans):
         loss = torch.nn.functional.cross_entropy(logits, Yb)
 
 
-        emb_table.grad = None
-        W1.grad = None
-        b1.grad = None
-        W2.grad = None
-        b2.grad = None
-
-
         loss.backward()
 
-
         with torch.no_grad():
+            assert emb_table.grad is not None
+            assert W1.grad is not None
+            assert b1.grad is not None
+            assert W2.grad is not None
+            assert b2.grad is not None
+
             emb_table -= lr * emb_table.grad
             W1 -= lr * W1.grad
             b1 -= lr * b1.grad
             W2 -= lr * W2.grad
             b2 -= lr * b2.grad
 
-        if rnd % 100 == 99:
+        if rnd % 1000 == 999:
             print(
                 f"{rnd-99}-{rnd} | "
                 f"loss={loss.item():.4f} | "
                 f"time={time.time()-t0:.4f}s"
             )
+
+        if rnd == round(50000 - 50000*1/5):
+            lr = 0.01
+        if rnd == round(50000 - 50000*1/20):
+            lr = 0.005
 
     save_yn = input("Do you want to save the model parameters? (y/n): ")
 
